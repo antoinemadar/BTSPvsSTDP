@@ -32,6 +32,7 @@ The data analyzed is available in that folder as well (CA1_COM_withPFs.mat and C
 -	Fig S10H-J and Fig 3B-C: BTSP/MilsteinExp/InVivoMilstein2021_1CSbatch_PampSpace.m
 
 *Dependencies*
+
 Brewermap : https://www.mathworks.com/matlabcentral/fileexchange/45208-colorbrewer-attractive-and-distinctive-colormaps  
 plot_ci : https://www.mathworks.com/matlabcentral/fileexchange/31752-plot_ci
 violinplot: Bechtold, Bastian, 2016. https://github.com/bastibe/Violinplot-Matlab, DOI: 10.5281/zenodo.4559847
