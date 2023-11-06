@@ -3,8 +3,7 @@ This code is associated with the article "BTSP, not STDP, Drives Shifts in Hippo
 
 Contact: madar@uchicago.edu or antoinemadar461@gmail.com
 
-*Figures 1, 5-7 and associated supplementary figures *
-(analysis of experimental data from https://www.nature.com/articles/s41467-021-23260-3):
+*Figures 1, 5-7 and associated supplementary figures (analysis of experimental data from https://www.nature.com/articles/s41467-021-23260-3)*
 
 -	COMtraj/CanDataAnalysis.m
 -	COMtraj/CanDataAnalysis_ExPFs.m
