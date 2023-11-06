@@ -8,6 +8,7 @@ Contact: madar@uchicago.edu or antoinemadar461@gmail.com
 
 -	COMtraj/CanDataAnalysis.m
 -	COMtraj/CanDataAnalysis_ExPFs.m
+
 The data analyzed is available in that folder as well (CA1_COM_withPFs.mat and CA3_COM_withPFs.mat)
 
 *Figures 2 and associated supplementary figures* 
