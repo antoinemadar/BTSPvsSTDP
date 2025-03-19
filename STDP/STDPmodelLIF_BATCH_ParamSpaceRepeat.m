@@ -14,7 +14,7 @@ Params.L = 300; % length of track in cm
 Params.PFsd = 18; % Standard deviation of mean PF, in cm
 Params.PFamp = 10; %peak FR in Hz
 Params.Nlaps = 30; % number of laps
-Params.period = 6; % lap duration, in sec
+Params.period = 20; % lap duration, in sec
 Params.dt = 0.001; % time resolution in sec
 Params.InShift = 0; % 0 if static input, 1 if shift
 Params.PslopeBinCenters = [-1.6 -1.4, -1.2 -1 -0.8 -0.6 -0.4 -0.2 0 0.2 0.4 0.6 0.8 1 1.2 1.4 1.6]; %in cm/lap
@@ -52,7 +52,8 @@ Params.Icap = 350e-12; % in Amps
 % Plasticity params
 Params.Pdecay = 20e-3; % Pre-before-Post time constant, in sec (20ms in SongAbbott2000 and YuShouval2006, 10ms in MehtaWilson2000)
 Params.Ddecay = 20e-3; % Post-before-Pre time constant, in sec (20ms in SongAbbott2000 and YuShouval2006, 10ms in MehtaWilson2000)
-Params.Pamp = 0.5/100; % in terms of Imax. Peak Pre-before-Post weight change (0.5% in SongAbbot2000, 0.6pA with no Imax in MehtaWilson2000)
+
+Params.Pamp = 1/100; % in terms of Imax. Peak Pre-before-Post weight change (0.5% in SongAbbot2000, 0.6pA with no Imax in MehtaWilson2000)
 Params.Damp = -0.5/100; % in terms of Imax. Peak Post-before-Pre weight change (-0.525% in SongAbbott2000, -90% of Pamp in MehtaWilson2000, which didn't have a maximum weight)
 
 Params.capWeights = 1; %cap weights at Imax if = 1. Runnaway weights are allowed if set to 0. 
@@ -69,8 +70,12 @@ Params.Nbin = 50; % Number of bins in which the length of the track is divided
 % number of simulations
 Nsim = 20;
 
+% x-axis for STDP rules
+delay1 = -500:1:0; % ms
+delay2 = 0:1:500; %ms
+
 %% STDP params to vary
-STDPrule = 0 ; % 0 or 1. 1 if varying plasticity params, 0 if varying input params controling FRout range
+STDPrule = 2; % 0, 1 or 2. 2 for asymmetric DPratio and Ddecay, 1 for symmetric Amp and decay, 0 if varying input params controling FRout range
 
 if STDPrule == 0
 % I choose not to vary Imax, because I want to distinguish between the effect of output FR and max weight change, which would be confounded here. 
@@ -78,17 +83,22 @@ if STDPrule == 0
 PFsd = [10 10 18 18 18 26 26 26] ; % Standard deviation of mean input PF, in cm (cf range in Can CA3 data + YuShouval2006). Lee2015 suggests it increases along proximodistal axis
 PFamp = [15 20 10 15 20 10 12 15]; % in Hz (cf Mou et al. 2018, LeeKnierim2004b, and Lee Knierim 2015). Lee2004b and 2015 suggest mean is around 9Hz in CA3, range [2 to 50Hz]
 FRin = [1.2, 1.7, 1.5, 2.2, 3, 2.2, 2.6, 3.3]; % approx. mean FR of each input neurons for the corresponding PFsd and PFamp stated above. This is not a parameter, but used for plots
-Wsd = [7 10 13]; % SD of the gaussian connectivity vector (unit = number of input neurons)
+Wsd = [7 10 13]; % SD of the gaussian connectivity vector (unit: number of input neurons)
 param1 = FRin; 
 param2 = Wsd;
-else
+elseif STDPrule == 1
 decay = [10 20 30 50 100]; %[10 20 30] % in ms
 Amp = [0.5 1 2 4 10]; %[1 5 10 15 30] %in %
 param1 = decay;
 param2 = Amp;
+elseif STDPrule == 2
+DPratio = [0.5, 0.7, 0.9, 1.2, 1.4]; %in % of Pamp (Mehta 2000 = 0.9)
+Ddecay = [10, 20, 30, 40, 50]; %[15, 30, 45, 60, 75]; %ms 
+param1 = DPratio; %
+param2 = Ddecay;
+Pamp = Params.Pamp*100; Pdecay = Params.Pdecay*1000;
+Wp = Pamp*exp(-delay2/Pdecay);
 end
-delay1 = -500:1:0; % ms
-delay2 = 0:1:500; %ms
 
 %% Simulations
 dummy = 0;
@@ -114,9 +124,12 @@ dummy = 0;
         modelname{p1,p2} = strcat(num2str(param1(p1)), ' ms - ', num2str(param2(p2)), ' %');
         Wd{p1,p2} = -Amp(p2)*exp(delay1/decay(p1));
         Wp{p1,p2} = Amp(p2)*exp(-delay2/decay(p1));
-        else
+        elseif STDPrule == 0
         modelname{p1,p2} = strcat( num2str(PFsd(p1)), 'cm, ', num2str(PFamp(p1)), 'Hz, ', num2str(param2(p2)), ' i.n.' );
 %         modelname{p1,p2} = strcat('FRin ', num2str(param1(p1)), ' Hz, ', 'Wsd ', num2str(param2(p2)));
+        elseif STDPrule == 2
+        modelname{p1,p2} = strcat(num2str(param1(p1)), ' % - ', num2str(param2(p2)), ' ms');       
+        Wd{p1,p2} = -DPratio(p1).*Pamp*exp(delay1/Ddecay(p2));
         end
 
         for n = 1:Nsim
@@ -125,12 +138,14 @@ dummy = 0;
                 Params.PFamp = PFamp(p1); %peak FR in Hz
                 Params.PFsd = PFsd(p1); % Standard deviation of mean PF, in cmC
                 Params.Wsd = Wsd(p2); % 
-            else %STDP rules
+            elseif STDPrule == 1 %symmetric STDP rules
                 Params.Pdecay = decay(p1)/1000; % Pre-before-Post time constant, in sec (20ms in SongAbbott2000 and YuShouval2006, 10ms in MehtaWilson2000)
                 Params.Ddecay = decay(p1)/1000; % Post-before-Pre time constant, in sec (20ms in SongAbbott2000 and YuShouval2006, 10ms in MehtaWilson2000)
                 Params.Pamp = Amp(p2)/100; % peak Pre-before-Post weight change, in percent of Imax (0.5% in SongAbbot2000, 0.6% in MehtaWilson2000)
                 Params.Damp = -Amp(p2)/100; % peak Post-before-Pre weight change, in percent of Imax (0.525% in SongAbbott2000, 90% in MehtaWilson2000, which didn't have a maximum weight)
-                
+            elseif STDPrule == 2 % asymmetric STDP rules
+                Params.Damp =-DPratio(p1)*Params.Pamp/100; %
+                Params.Ddecay = Ddecay(p2)/1000;
             end
     
             % model
@@ -228,7 +243,107 @@ blue = [0 0.45 0.74]; % backward
 red = [0.85 0.32 0.01]; % forward
 grey = [0.5 0.5 0.5]; %nonsig
 
-if STDPrule == 1 % exploring STDP rules
+if STDPrule == 2
+
+xval = split(num2str(param2));
+yval = split(num2str(param1));
+sig = shiftPval(:); FRoutAll = FRout(:);
+
+tl =  tiledlayout(2,4, 'TileSpacing','Compact','Padding','Compact');
+title(tl,['PFin peak = ' num2str(Params.PFamp) 'Hz, A_{LTP} = ' num2str(Params.Pamp*100) '%, Tau_{LTP} = ' num2str(Params.Pdecay)])
+    nexttile
+        for p1 = 1:length(param1)
+            for p2 = 1:length(param2)
+                plot([delay1 delay2], [Wd{p1,p2} Wp], 'k');hold on
+            end
+        end
+        plot([delay1 delay2], [Wd{1,3} Wp], 'r', 'LineWidth', 1.5 );hold on % akin to BiPoo2001
+        % plot([delay1 delay2], [Wd{3,2} Wp], 'b', 'LineWidth', 1.5 ); % akin to Mehta, except tau = 10ms in Mehta, not 20ms. 
+        xline(0);
+        yline(0); 
+        xlim([-150,150])
+        xlabel('pre-post delay (ms)'); ylabel('Weight change (% of EPSC_{max})');
+        box off; axis square;
+    nexttile
+        imagesc(meanSlope); hold on
+        set(gca, 'XTick', 1:length(param2), 'XTickLabel', xval, 'YTick', 1:length(param1), 'YTickLabel', yval);
+        ylabel('A_{LTD}/A_{LTP} (%)'); xlabel('Tau_{LTD} (ms)');
+        colormap(brewermap(256,'*RdBu')); 
+    %     caxis([-ceil(max(meanSlope(:))), ceil(max(meanSlope(:)))]);
+        % caxis([-(max(abs(meanSlope(:)))), max(abs(meanSlope(:)))]);
+        caxis([-0.2, 0.2]);
+        c = colorbar; c.Label.String = 'Shifting slope (cm/lap)';
+        for p1 = 1:length(param1)-1
+            yline(p1+0.5, 'k-', 'LineWidth', 0.5);
+        end
+        for p2 = 1:length(param2)-1
+            xline(p2+0.5, 'k-', 'LineWidth', 0.5);
+        end
+        axis square
+     nexttile([1 2])
+        PrFwd2 = reshape(PropFwd', [], 1); %reshape into a column vector, where each column was concatenated
+        PrBck2 = reshape(PropBck', [], 1); 
+        PrNon2 = reshape(PropNonSig', [], 1);
+        Props2 = [PrBck2 PrFwd2 PrNon2];
+        b2 = bar(Props2, 'stacked', 'FaceColor','flat');
+        b2(1).CData = blue; b2(2).CData = red; b2(3).CData = grey;
+        ylabel('proportion of PFs'); 
+%         xlabel('models (Tau - max \DeltaW)')
+%         set(gca, 'XTick', 1:length(modelgp(:)), 'XTickLabel', reshape(modelname', [], 1));
+        set(gca, 'XTick', [], 'XTickLabel', []);
+        box off;
+    nexttile
+        clear x xneg xpos
+        COMslopeAll = COMslope(:);
+        x = meanPFpeak(:); y = meanSlope(:); PFpeakAll = PFpeak(:);
+        xneg = x-PFpeakCIlo(:); xpos = PFpeakCIup(:)-x;
+        yneg = y-SlopeCIlo(:); ypos = SlopeCIup(:)-y;
+        scatter(PFpeakAll, COMslopeAll, 15, 'o', 'filled', 'MarkerFaceColor', grey, 'MarkerFaceAlpha', 0.5); hold on
+        scatter(PFpeakAll(sig<0.05), COMslopeAll(sig<0.05), 15, 'o', 'MarkerEdgeColor', 'k'); hold on
+        errorbar(x,y,yneg,ypos,xneg,xpos,'.', 'MarkerSize', 8, 'LineWidth', 0.75, 'Color', 'r', 'MarkerFaceColor', 'r'); hold on
+        yline(0,'k--', 'linewidth', 1);
+        xlim([8 16])
+        xlabel('peak PFout (Hz)'); ylabel('Shifting slope (cm/lap)'); 
+        box off; axis square; 
+     nexttile
+        clear x xneg xpos y yneg ypos
+        x = meanPFsd(:); y = meanSlope(:);
+        SD_meanPFAll = SD_meanPF(:);
+        xneg = x-PFoutSDCIlo(:); xpos = PFoutSDCIup(:)-x;
+        yneg = y-SlopeCIlo(:); ypos = SlopeCIup(:)-y;
+        scatter(SD_meanPFAll, COMslopeAll, 15, 'o', 'filled', 'MarkerFaceColor', grey, 'MarkerFaceAlpha', 0.5); hold on
+        scatter(SD_meanPFAll(sig<0.05), COMslopeAll(sig<0.05),15, 'o', 'MarkerEdgeColor', 'k'); hold on
+        errorbar(x,y,yneg,ypos,xneg,xpos,'.', 'Color', 'r', 'MarkerSize', 8,'LineWidth', 0.75, 'MarkerFaceColor', 'r'); hold on
+        yline(0,'k--', 'linewidth', 1); hold on
+        % yline(mean(CA1slopes.N),'g');
+    %     ylim([-0.4 0.4])
+        xlim([15 22])
+        xlabel('PFout s.d. (cm)'); ylabel('Shifting slope (cm/lap)'); 
+        box off; axis square
+     nexttile([1,2])
+        yline(0, 'k--', 'linewidth', 1)
+        map = brewermap(8,'Paired'); %cool(4); %brewermap(4,'PiYG')
+        mapCA1 = map(3:4,:);
+        yline(mean(CA1slopes.N), '--', 'Color', mapCA1(2,:), 'LineWidth', 1);
+        yline(mean(CA1slopes.F), '--', 'Color', mapCA1(1,:), 'LineWidth', 1);
+        vp = violinplot(COMslopeAll, cat(1,modelnameMat{:}), 'GroupOrder', reshape(modelname', [], 1), 'ShowMean', true); hold on
+        vcolors = lines(length(param2));
+%         vcolors = vcolors([1:length(param2)-1, end], :);
+        ax = gca;
+        for v1 = 1:length(param2)
+            for v2 = 1:length(param1)
+                item = v2+(v1-1)*length(param2);
+                vp(item).ViolinColor = vcolors(v2,:);
+                ax.XTickLabel{item} = sprintf('\\color[rgb]{%f,%f,%f}%s', vcolors(v2,:), ax.XTickLabel{item});
+            end
+        end
+        y = reshape(meanSlope', [], 1); yneg = y - reshape(SlopeCIlo', [], 1); ypos = reshape(SlopeCIup', [], 1)-y;
+        errorbar(1:length(modelgp(:)), y,yneg,ypos,'.', 'Color', 'r', 'MarkerSize', 8, 'LineWidth', 0.75, 'MarkerFaceColor', 'r'); hold on
+        xlabel('models: A_{LTD}/A_{LTP} - Tau_{LTD}'); ylabel('Shifting Slope (cm/lap)');
+        xlim([0 length(modelgp(:))+1])
+        box off;
+
+elseif STDPrule == 1 % exploring STDP rules
 
     yval = split(num2str(param1));
     xval = split(num2str(param2));

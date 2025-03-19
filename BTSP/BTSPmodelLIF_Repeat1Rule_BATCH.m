@@ -33,19 +33,28 @@ Params.tau_sra = 100e-3; % time constant for exponential decay of SRA variable
 Params.Shunting = 0; % implement shunting inhib (capping I) if = 1, 0 otherwise. 
 Params.Icap = 350e-12; % in Amps
 
-% Plasticity params
-Params.Pdecay = 1; % Pre-before-Post time constant, in sec (1.31s on average in Bittner et al. 2017)
-Params.Ddecay = 0.02; % Post-before-Pre time constant, in sec (0.69s on average in Bittner et al. 2017)
+% Plasticity params: p(CS)
+Params.CSproba = 0.5/100; % proba of an output spike to be a plateau potential/complex spike (1.8% on average in Bittner et al. 2017)
+Params.pCSdynamic = 1; % 0 => no dynamics, CSproba above is used; 1 => dynamic p(CS) using the following parameters:
+    Params.Apcs = 0.8; % max lapwise p(CS) = Apcs + Bpcs where Bpcs is the baseline. Cf Supp Fig associated to Fig 7. Same max amplitude for Familiar (F) and Novel (N) conditions.
+    Params.Tau_pcs = 1; % in laps (cf Fig 6 and 7 of our manuscript.). Same time constants for F and N (but exp fits on instantaneous MSD suggest 1.15 for N and 0.85 for F)
+    Params.Bpcs = 3/100; % Baseline frequency of CSs per lap. 1>N>F>0. 0 results in no shift induced in later laps (cf Fig 7: a static pCS is not enough to lead to high Diffusion coeff in later laps)
+    Params.SDcs = 25; % in cm (same unit as Params.L); Standard Deviation of the gaussian defining where a CS can occur around the current COM of the weights (also expressed in cm)
+    Params.Bound = 60; % hard low and high boundaries around mid-Track where a CS can occur
+
+%Plasticity Params: BTSP
+Params.Pdecay = 1.5; % Pre-before-Post time constant, in sec (1.31s on average in Bittner et al. 2017)
+Params.Ddecay = 0.2; % Post-before-Pre time constant, in sec (0.69s on average in Bittner et al. 2017)
 % Params.Pamp = 0.045; % in terms of Imax. Peak Pre-before-Post weight change (300% of baseline EPSP for pairings with 5*10 EPSPs at 10Hz, in Bittner et al. 2017)
-Params.Pamp = 20e-12; % in Amps
-Params.CSproba = 0.00175; % proba of an output spike to be a plateau potential/complex spike (1.8% on average in Bittner et al. 2017)
+Params.Pamp = 80e-12; % in Amps
 Params.PostPreBoost = 1.1; % amplitude of weight change for postpre rule which is triggered on CS, not on spikes (so, to be somewhat balanced, it should = 10 so that amplitude is the Bittner2017 amplitude/1CS and not /10spikes like the prepost rule)
 Params.capWeights = 0; %cap weights at Imax if = 1. Runnaway weights are allowed if set to 0. 
+% Params.Drest = -0.25; % for CA3 BTSP rule, which shows a depression of ~25% of the max deltaVm far from the CS
 Params.HomeoNorm = 1; % 0 if no homeostatic normalization rule, 1 if yes.
 
-Params.WUdyn = 0; %  Weight Update dynamics: 0 if instantaneous update, 1 if dynamic update
+Params.WUdyn = 1; %  Weight Update dynamics: 0 if instantaneous update, 1 if dynamic update
 Params.Wrest = 0; % Synaptic weight resting state, in Amps (towards which any synapse would relax if Wtarget = 0) 
-Params.tau_wu = 5; % weight update time constant, in sec
+Params.tau_wu = 15; % weight update time constant, in sec
 
 % output PF 
 Params.Nbin = 50; % Number of bins in which the length of the track is divided
@@ -53,9 +62,38 @@ Params.Nbin = 50; % Number of bins in which the length of the track is divided
 % number of simulations
 Nsim = 500;
 
+%% Out-of-field p(CS)
+
+% Apcs = 0.4; % frequency of CSs on second lap. Cf Supp Fig associated to Fig 7. Same max amplitude for Familiar (F) and Novel (N) conditions.
+% Tau_pcs = 0.8; % in laps (cf Fig 6 and 7 of our manuscript.). Same time constants for F and N (but exp fits on instantaneous MSD suggest 1.15 for N and 0.85 for F)
+% Bpcs = 0.05; % 0 for F, > 0 for N (cf Fig 7: a static pCS is not enough to lead to high Diffusion coeff in later laps)
+% 
+% laps = 0:28;
+% pCSoof = Apcs.*exp(-laps./Tau_pcs) + Bpcs; % lapwise p(CS) not tied to current PF
+% CSok = binornd(1,pCSoof);
+% 
+% figure
+% plot(laps+1, pCSoof, 'k')
+% ylim([0 1])
+% xlabel('post-onset laps')
+% ylabel('p(CS)')
+% title('lapwise p(CS)')
+% box off
+% axis square
+% 
+% figure
+% x=1:300;
+% PF = exp(-0.5*(x - L/2).^2/13^2);
+% G = exp(-0.5*(x - L/2).^2/20^2);
+% plot(x, PF, 'k'); hold on
+% plot(x, G, 'g');
+% xlabel('Track, cm');
+% box off; axis square
+
 %% Simulations
 for n = 1:Nsim
     output(n) = BTSPplus_LIFadapt(Params);
+%     output(n) = BTSPplus_LIFadapt_CA3(Params); % for CA3-like BTSP rule with depression far from CS
 
 % % Warning: loading all that in the workspace demands a lot of RAM when Nsim is large 
 %     I{n} = output(n).I;
@@ -112,7 +150,7 @@ figure(2) % R2 vs slope
     scatter(COMslope(IdxFwd), shiftR2(IdxFwd), [], red); hold on
     scatter(COMslope(IdxBck), shiftR2(IdxBck), [], blue); hold on
     scatter(COMslope(IdxNonSig), shiftR2(IdxNonSig), [], grey);
-    xlim([-2, 1.5])
+    % xlim([-2, 1.5])
     xlabel('Shift (COM slope), cm/lap');
     ylabel('R-square');
     box off; axis square;
@@ -149,7 +187,7 @@ figure(6)
 
 figure(7) % Width increase vs slope
     PFsdDiff_mean = mean(PFsdDiff);
-    PFsdDiff_CI = bootci(1000, @mean, PFsdDiff);
+    PFsdDiff_CI = bootci(1000, @nanmean, PFsdDiff);
     PFsdDiff_CIlo = PFsdDiff_CI(1,1);
     PFsdDiff_CIup = PFsdDiff_CI(2,1);
     y = PFsdDiff_mean; yneg = y-PFsdDiff_CIlo; ypos = PFsdDiff_CIup-y;
@@ -208,37 +246,78 @@ figure %spatial FR lap 1 vs last lap
         xlabel('spatial bins'); ylabel('norm FR relative to peak');
         box off; axis square;
 
-%% mean square displacement (random walk analysis)
+[~, idxR2] = maxk(shiftR2, 20);
+[~, idxPval] = maxk(shiftPval, 20);
+gpidx = find(shiftPval<0.05 & shiftR2>0.5);
+gpidx2 = find(COMslope<-0.5);
+gpidx = 1:25;
+
+% Ni = gpidx2; 
+% for n = 1:length(Ni)
+%     m = Ni(n);
+% figure %FR map of extreme backward and forward shifts
+%     [row_lap,column_bin] = find(CSbin{m});
+%     imagesc(SpatialFRout{m}); hold on
+%     scatter(COMbin{m},1:Params.Nlaps, 30, [1 0 0], 'filled'); hold on
+%     scatter(column_bin, row_lap, 10, [0 1 1], 'filled');
+%     xlabel('spatial bins'); ylabel('lap');
+%     legend('Complex spike','COM', 'Location', 'BestOutside');
+%     colormap(flipud(gray(256))); %colormap(brewermap(256,'*YlOrRd'));
+%     c = colorbar; c.Label.String = 'Firing rate (Hz)';
+%     box off; axis square;
+% end
+%% mean square displacement (diffusion analysis)
 
 Trajs = cat(1,COMbin{:}).*6; % in cm
 Disp = Trajs - Trajs(:,1); % trajectories centered on initial location, with forward direction as positive values
 DispSq = Disp.^2;
-MSD = mean(DispSq,1); % average all neurons for each lap
+MSD = mean(DispSq,1,"omitmissing"); % average all neurons for each lap
 rootMSD = sqrt(MSD);
 for lap = 1:size(Trajs,2)
-msdCI(:,lap) = bootci(1000, @mean, DispSq(:,lap));
+msdCI(:,lap) = bootci(1000, @nanmean, DispSq(:,lap));
 end
 [B,BINT,R,Rint,STATS] = regress(MSD', [ones(size(Trajs,2),1), [1:size(Trajs,2)]'] );
 linMDL = B(1)+B(2)*[1:size(Trajs,2)];
+RegStart = 4;
+Xlm = [ [RegStart:Params.Nlaps]', ones(size([RegStart:Params.Nlaps]'))];
+[Bmsd,BINTmsd,Rmsd,RINTmsd,STATSmsd] = regress(MSD(RegStart:end)', Xlm);
+lmMSD = Xlm*Bmsd;
 
 figure
 errorbar(1:size(Trajs,2), MSD,MSD-msdCI(1,:),msdCI(2,:)-MSD,'o-', 'Color', 'k', 'MarkerFaceColor', [0 0 0], 'MarkerSize', 3, 'LineWidth', 1.5); hold on
-plot([1 size(Trajs,2)], [0 MSD(end)], 'g'); hold on
-plot(1:size(Trajs,2), linMDL, 'r'); hold on
+% plot([1 size(Trajs,2)], [0 MSD(end)], 'g'); hold on
+plot(1:size(Trajs,2), linMDL, 'g'); hold on
+plot([RegStart:Params.Nlaps]', lmMSD, 'r-'); hold on 
 xlim([1 size(Trajs,2)+1])
 xlabel('laps after emergence')
 ylabel('mean squared displacement (cm^2)')
+title(['D = ' num2str(Bmsd(1)/2)])
 box off
 axis square
 
-figure
-plot(1:size(Trajs,2), rootMSD,'k-')
-xlim([1 size(Trajs,2)+1])
-ylim([1 size(Trajs,2)+1])
-xlabel('laps after emergence')
-ylabel('root mean squared displacement (cm)')
-box off
-axis square
+figure % violin plot of slopes, with mean and median + line at 0 + 95% bootstrap CI
+    plot([0.5 1.5], [0 0], 'k--') 
+    %yline(0,'k--'); hold on
+    violinplot(COMslope, [], 'Width', 0.3, 'ViolinColor', [0, 0, 0], 'ShowMean', true(1));
+    ylabel('Shift (COM slope), cm/lap');
+    box off; axis square;
+
+figure % proportion of forward, backward and stable/non-signif PFs
+    b = bar(1, [PropBck PropFwd PropNonSig], 'stacked', 'FaceColor','flat');
+    b(1).CData = blue; b(2).CData = red; b(3).CData = grey;
+    ylabel('proportion');
+    box off; axis square;
+
+% figure
+% plot(1:size(Trajs,2), rootMSD,'k-')
+% xlim([1 size(Trajs,2)+1])
+% ylim([1 size(Trajs,2)+1])
+% xlabel('laps after emergence')
+% ylabel('root mean squared displacement (cm)')
+% box off
+% axis square
+
+
 %% figure to adapt to present code
 % figure
 %     subplot(2,2,1)

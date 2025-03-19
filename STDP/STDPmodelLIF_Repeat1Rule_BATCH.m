@@ -8,7 +8,7 @@ load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\CanData\CA3_Slop
 tic
 %% Parameters
 % Inputs params
-Params.N = 1000; % number of input neurons
+Params.N = 100; % number of input neurons
 Params.L = 300; % length of track in cm
 Params.PFsd = 18; % Standard deviation of mean PF, in cm
 Params.PFamp = 10; %peak FR in Hz
@@ -28,9 +28,9 @@ elseif ismember('FandN', Context)
 end
 
 % Synapses params
-Params.Imax = 12e-12; % max synaptic weight, a current in Amps. % NolanWiles2011 uses 10-226pA. Mehta uses 1.5-4nA. SongAbbot use conductances with G between 0 and 150pS, but not sure about the initial weight matrix. 
+Params.Imax = 85e-12; % max synaptic weight, a current in Amps. % NolanWiles2011 uses 10-226pA. Mehta uses 1.5-4nA. SongAbbot use conductances with G between 0 and 150pS, but not sure about the initial weight matrix. 
 Params.Idecay = 10e-3; % EPSC time constant, in sec
-Params.Wsd = 100; %1.6*Params.PFsd/(Params.L/Params.N); %in neurons, standard deviation of initial synaptic weight vector (for gaussian connectivity)
+Params.Wsd = 10; %1.6*Params.PFsd/(Params.L/Params.N); %in neurons, standard deviation of initial synaptic weight vector (for gaussian connectivity)
 Params.maxW = 1; % from 0 to 1, proportion of Imax defining the initial maximum weight
 
 % Output neuron LIF params
@@ -49,10 +49,10 @@ Params.Shunting = 0; % implement shunting inhib (capping I) if = 1, 0 otherwise.
 Params.Icap = 350e-12; % in Amps
 
 % Plasticity params
-Params.Pdecay = 20e-3; % Pre-before-Post time constant, in sec (20ms in SongAbbott2000 and YuShouval2006, 10ms in MehtaWilson2000)
-Params.Ddecay = 20e-3; % Post-before-Pre time constant, in sec (20ms in SongAbbott2000 and YuShouval2006, 10ms in MehtaWilson2000)
-Params.Pamp = 0.5/100; % in terms of Imax. Peak Pre-before-Post weight change (0.5% in SongAbbot2000, 0.6pA with no Imax in MehtaWilson2000)
-Params.Damp = -0.5/100; % in terms of Imax. Peak Post-before-Pre weight change (-0.525% in SongAbbott2000, 90% of Pamp in MehtaWilson2000, which didn't have a maximum weight)
+Params.Pdecay = 16.8e-3; %20e-3; % Pre-before-Post time constant, in sec (20ms in SongAbbott2000 and YuShouval2006, 10ms in MehtaWilson2000)
+Params.Ddecay = 33.7e-3; %20e-3; % Post-before-Pre time constant, in sec (20ms in SongAbbott2000 and YuShouval2006, 10ms in MehtaWilson2000)
+Params.Pamp = 0.96/100; %0.5/100; % in terms of Imax. Peak Pre-before-Post weight change (0.5% in SongAbbot2000, 0.6pA with no Imax in MehtaWilson2000)
+Params.Damp = -0.53/100; %-0.5/100; % in terms of Imax. Peak Post-before-Pre weight change (-0.525% in SongAbbott2000, 90% of Pamp in MehtaWilson2000, which didn't have a maximum weight)
 
 Params.capWeights = 1; %cap weights at Imax if = 1. Runnaway weights are allowed if set to 0. 
 
@@ -66,7 +66,7 @@ Params.tau_wu = 5; % weight update time constant, in sec
 Params.Nbin = 50; % Number of bins in which the length of the track is divided. 50 for CanSheffield2021 (6 cm), 120 for MouJi2018 (2.5 cm)
 
 % number of simulations
-Nsim = 100;
+Nsim = 10;
 
 %% Simulations
 
@@ -243,7 +243,7 @@ nexttile
     plot([0.5 1.5], [0 0], 'k--') 
     %yline(0,'k--'); hold on
     violinplot(PFsdDiff, [], 'Width', 0.3, 'ViolinColor', [0, 0, 0], 'ShowMean', true(1));
-    ylim([-1 11])
+    % ylim([-1 11])
     ylabel('PF \DeltaSD (cm)'); %(last 3 laps - first 3 laps)
     box off; axis square;
 nexttile
@@ -257,7 +257,7 @@ nexttile
 nexttile
     plot(mean(SpatialFRout{Ni}(1:3,:)), 'k'); hold on
     plot(mean(SpatialFRout{Ni}(end-2:end,:)), 'r'); hold on
-    legend('laps 1-3', 'last 3 laps', 'Location','best')
+    % legend('laps 1-3', 'last 3 laps', 'Location','best')
     xlabel('spatial bins'); ylabel('Firing rate (Hz)');
     box off; axis square;
 

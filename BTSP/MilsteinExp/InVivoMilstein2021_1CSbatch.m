@@ -512,8 +512,8 @@ nexttile
 %         title('Spatial (smoothed)');
         title(['R2 = ' num2str(RsquaredT3final)])
 
-exportgraphics(t1,'BTSP_MilsteinExp1CSBatch_SheffieldParams_20pA_A.pdf','BackgroundColor','none', 'ContentType','vector')
-
+%exportgraphics(t1,'BTSP_MilsteinExp1CSBatch_SheffieldParams_20pA_A.pdf','BackgroundColor','none', 'ContentType','vector')
+figure
 t2 = tiledlayout('flow', 'TileSpacing','Compact','Padding','Compact');
 nexttile % 3D plot: Time from CS vs pre-induction Vm vs deltaVm (Downsampled)
     AllmuVtime = [muVtimeD{:}];

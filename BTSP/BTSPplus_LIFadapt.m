@@ -33,9 +33,17 @@ tau_sra = params.tau_sra; % time constant for exponential decay of SRA variable
 
 % Plasticity params
 CSproba = params.CSproba; % proba of an output spike to be a plateau potential/complex spike (1.8% on average in Bittner et al. 2017)
+pCSdynamic = params.pCSdynamic;
+Apcs = params.Apcs; % max frequency of CSs. Cf Supp Fig associated to Fig 7. Same max amplitude for Familiar (F) and Novel (N) conditions.
+Tau_pcs = params.Tau_pcs; % in laps (cf Fig 6 and 7 of our manuscript.). Same time constants for F and N (but exp fits on instantaneous MSD suggest 1.15 for N and 0.85 for F)
+Bpcs = params.Bpcs; % N>F>0. 0 results in no shift induced in later laps (cf Fig 7: a static pCS is not enough to lead to high Diffusion coeff in later laps)
+SDcs = params.SDcs; % in cm (same as Params.L); Standard deviation of the gaussian defining where a CS can occur around the current COM of the weights
+Bound = params.Bound;
+LowBound = round(L/2)-Bound;
+HighBound = round(L/2)+Bound;
+
 Pdecay = params.Pdecay; % Pre-before-Post time constant, in sec (1.31s on average in Bittner et al. 2017)
 Ddecay = params.Ddecay; % Post-before-Pre time constant, in sec (0.69s on average in Bittner et al. 2017)
-% Pamp = params.Pamp*Imax; % peak weight change, in Amps (3*baseline EPSP for pairings with 10 EPSPs at 10Hz, in Bittner et al. 2017)
 Pamp = params.Pamp; % peak weight change, in Amps (3*baseline EPSP for pairings with 10 EPSPs at 10Hz, in Bittner et al. 2017)
 PostPreBoost = params.PostPreBoost; % amplitude of weight change for postpre rule which is triggered on CS, not on spikes (so, to be somewhat balanced, it should = 10 so that amplitude is the Bittner2017 amplitude/1CS and not /10spikes like the prepost rule)
 
@@ -68,6 +76,18 @@ Tlap1 = 0:dt:period; Tlap1 = Tlap1(1:end-1);
 Lap1 = linspace(0,L,period/dt); % positions during 1 lap
 Run = repmat(Lap1,[1 Nlaps]);%positions during the whole run
 
+% segment by lap
+NewLapIdx = find(Run==0);
+    % NewLapTimes = Trun(NewLapIdx);
+laps_start = zeros(size(Run));
+% laps_start(Run==0) = 1; % 1 at beginning of a new lap
+for nl = 1:Nlaps
+    laps_start(NewLapIdx(nl)) = nl; % tracks the lap number
+end
+laps_end = zeros(size(Run));
+laps_end(Run==L) = 1; % 1 on end of laps
+lapL = find(laps_end,1); % number of indices in a lap
+
 %convert trajectory into firing rate
 FRrun = zeros(N,length(Run));
 for i = 1:length(Run)
@@ -91,9 +111,12 @@ W = zeros(N,length(Trun));
 Wmax = maxW*Imax;
 W(:,1) = Wmax*exp(-0.5*(NeuronID - N/2).^2/Wsd^2); % vector of N rows following a gaussian distribution of Wmax amplitude 
 
-% segment by lap
-NewLapIdx = find(Run==0);
-% NewLapTimes = Trun(NewLapIdx);
+%% for dynamic p(CS)
+if pCSdynamic == 1
+laps = 0:28;
+pCSdyn = Apcs.*exp(-laps./Tau_pcs) + Bpcs; % lapwise p(CS) for lap 1 to 29 
+CSok = binornd(1,pCSdyn); %determine if there is a CS in each lap, given lapwise proba
+end
 
 %% input-output dynamics using Euler's forward method to solve ODEs
 I = zeros(1,length(Trun)); 
@@ -131,8 +154,24 @@ for i = 1:length(Trun)-1
        V(i+1) = Vreset;
        SRA(i+1) = SRA(i+1) + dSRA;
        OutRaster(i) = 1;
-       CS(i) = binornd(1, CSproba);
+       if pCSdynamic == 0
+          CS(i) = binornd(1, CSproba);
+       end
     end
+    
+    if pCSdynamic==1 && laps_start(i)>0 && laps_start(i)<Nlaps && CSok(laps_start(i))>0 % at the beginning of a new lap where a CS will occur, select CS location and index
+        if HomeoNorm == 1
+            Wcom = sum(W2(:,i)'.*PFcom)/sum(W2(:,i)); % find COM of the current weights
+        else
+            Wcom = sum(W(:,i)'.*PFcom)/sum(W(:,i)); % find COM of the current weights
+        end
+        CSx = SDcs.*randn(1) + Wcom; % position of the CS on the track is randomly sampled from a normal distribution centered on current weight COM and Params.SDcs standard deviation
+        CSx = max(LowBound,min(CSx,HighBound)); % restrict CSx between Low and High track boundaries (e.g. 75 and 225cm, for a +/-75cm around middle of the 300cm track)
+        [~, CSi] = min(abs(Lap1-CSx));% find the corresponding index of CSx
+        CS(CSi+i-1) = 1;
+        clear CSx CSi Wcom
+    end
+
     % BTSP variables P and D + update Synaptic weights W
     D(i+1) = D(i) - dt*D(i)/Ddecay + CS(i); % output train of Complex Spikes convolved with Post-before-Pre update rule, in %
     for n = 1:N % for each presynaptic neuron
@@ -141,7 +180,7 @@ for i = 1:length(Trun)-1
         Dact(n,i+1) = InRasters(n,i)*D(i)*Pamp*PostPreBoost; %evaluate post-before-pre variable at time of an input spike
         
         % update Synaptic weights W, with or without dynamics
-        if WUdyn == 1 && HomeoNorm == 0 % dynamic update with time constant tau_wu
+        if WUdyn == 1 %&& HomeoNorm == 0 % dynamic update with time constant tau_wu
             Wtarget(n,i+1) = Wtarget(n,i) + Pact(n,i+1) + Dact(n,i+1);
             W(n,i+1) = W(n,i) + dt .* (Wrest - W(n,i) + Wtarget(n,i+1))./ tau_wu;
         else
@@ -157,12 +196,13 @@ for i = 1:length(Trun)-1
     end
     
     if HomeoNorm == 1 % implement heterosynaptic competition or not  
-        if WUdyn == 0
+        % if WUdyn == 0
             W2(:,i+1) = W(:,i+1).*sum(W(:,1))./sum(W(:,i+1)); % Homeostatic synaptic normalization, multiplicative method
-        else % WUdyn == 1
-            Wtarget(:,i+1) = W(:,i+1).*sum(W(:,1))./sum(W(:,i+1));
-            W2(n,i+1) = W(n,i) + dt .* (Wrest - W(n,i) + Wtarget(n,i+1))./ tau_wu;
-        end
+        % else % WUdyn == 1
+        %     Wtarget(:,i+1) = W(:,i+1).*sum(W(:,1))./sum(W(:,i+1));
+        % %     W2(n,i+1) = W(n,i) + dt .* (Wrest - W(n,i) + Wtarget(n,i+1))./ tau_wu;      % this cannot work here because it has to be in the for loop through the n inputs          
+        %     end
+        % end
     end
 end
 % Spiketimes_outAll = Trun(logical(OutRaster));

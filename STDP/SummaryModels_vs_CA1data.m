@@ -112,7 +112,7 @@ ylabel({'COM slopes'; '(cm/lap)'});
 set(gca, 'XTick', [], 'XTickLabel', []);
 box off;
 
-% figure % bootstrapped means compared to CA1 mean (averaged across animals)
+% figure % bootstrapped means compared to CA1 mean
 subplot(3,1,2)
 y = meanSlope; yneg = y-SlopeCIlo; ypos = SlopeCIup-y;
 errorbar(1, y(1),yneg(1),ypos(1),'o', 'Color', mapCA1(2,:), 'MarkerFaceColor', mapCA1(2,:), 'MarkerSize', 3); hold on
@@ -136,6 +136,3 @@ ylabel('proportion of PFs'); %xlabel('models')
 xlim([0.5 length(group)+0.5]);
 set(gca, 'XTick', 1:length(group), 'XTickLabel', {'CA1N data'; 'model A'; 'model B'; 'mdlA + CA3N'; 'mdlB + CA3N'});
 box off;
-
-
-%% BTSP plots

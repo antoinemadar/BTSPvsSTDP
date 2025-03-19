@@ -6,11 +6,13 @@ close all
 %CA1 data
 load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\CanData\CA1_SlopeDistrib.mat')
 load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\CanData\CA1perAnimal_slopes_props.mat')
+load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\CanData\\CanData_CA1_MSD.mat')
 
 % CA1N
 group{1} = ones(size(CA1slopes.N));  
 slopes{1} = CA1slopes.N; % all PFs pooled
-CA1N.Bck = 0.4850; CA1N.Fwd = 0.0454; CA1N.ns = 0.4696; % based on all PFs pooled (computed in "CanDataAnalysis")
+CA1N.Bck = 0.4850; CA1N.Fwd = 0.0454; CA1N.ns = 0.4696; % based on all PFs pooled 15 laps minimum (computed in "CanDataAnalysis")
+% CA1N.Bck = 0.49; CA1N.Fwd = 0.05; CA1N.ns = 0.46; % based on all PFs pooled 30 laps minimum (computed in "CanDataAnalysis")
 meanSlopeCA1N_animals = mean(meanSlope_CA1(1,:),2);
 meanASlopeCA1N_animals = mean(meanASlope_CA1(1,:),2);
 PrBck{1} = mean(PropBck_CA1(1,:)); % average across animals
@@ -19,7 +21,10 @@ PrNon{1} = mean(PropNonSig_CA1(1,:));
 
 
 % BTSP CA1N-like
-modelN = load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\BTSP\100samples\instantBTSPdecoupledHomeonorm\Speed15cmpersec_Pamp20pA\Workspace_Speed15_Pamp20pA_pCS0_005_500repeats.mat');
+modelN = load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\BTSP\100samples\instantBTSPhomeo_pCSdynamic\N-like tries\Workspace_instantBTSPhomeo_Pamp80pA_pCSdyn_N-like_Apcs0_65_Bpcs_0_025_Taupcs1_3_SDcs29_Bound60_WUdyntau15s_Ddecay0_2_Pdecay1_5_500samples.mat');
+% modelN = load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\BTSP\100samples\instantBTSPhomeo_pCSdynamic\N-like tries\Workspace_instantBTSPhomeo_Pamp80pA_pCSdyn_N-like_Apcs0_8_Bpcs_0_03_Taupcs1_1_SDcs25_Bound60_WUdyntau15s_Ddecay0_2_Pdecay1_5_500samples.mat');
+% modelN = load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\BTSP\MilsteinModel\Wmax125pA\workspace_pCS0_3%_repeat1rule_500samples_Wmax125pA.mat');
+% modelN = load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\BTSP\100samples\instantBTSPdecoupledHomeonorm\Speed15cmpersec_Pamp20pA\Workspace_Speed15_Pamp20pA_pCS0_005_500repeats.mat');
 % modelN = load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\BTSP\100samples\instantBTSPdecoupledHomeonorm\Speed15cmpersec_Pamp25_5pA\Workspace_BTSP100repeats_Speed15_Pamp25_5pA_pCS0_005.mat');
 group{2} = 2*ones(length(modelN.COMslope),1);
 slopes{2} = modelN.COMslope';
@@ -31,7 +36,8 @@ PrNon{2} = modelN.PropNonSig;
 % CA1F
 group{3} = 3*ones(size(CA1slopes.F));  
 slopes{3} = CA1slopes.F;
-CA1F.Bck = 0.3315; CA1F.Fwd = 0.0880; CA1F.ns = 0.5805; % based on all PFs pooled
+CA1F.Bck = 0.3315; CA1F.Fwd = 0.0880; CA1F.ns = 0.5805; % based on all PFs pooled 15 minlaps
+% CA1F.Bck = 0.3375; CA1F.Fwd = 0.0955; CA1F.ns = 0.5673; % based on all PFs pooled 30 minlaps
 meanSlopeCA1F_animals = mean(meanSlope_CA1(2,:),2); % average across animals
 meanASlopeCA1F_animals = mean(meanASlope_CA1(2,:),2);
 PrBck{3} = mean(PropBck_CA1(2,:));
@@ -39,7 +45,10 @@ PrFwd{3} = mean(PropFwd_CA1(2,:));
 PrNon{3} = mean(PropNonSig_CA1(2,:));
 
 % BTSP CA1F-like
-modelF = load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\BTSP\100samples\instantBTSPdecoupledHomeonorm\Speed15cmpersec_Pamp20pA\Workspace_Speed15_Pamp20pA_pCS0_002_500repeats.mat');
+modelF = load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\BTSP\100samples\instantBTSPhomeo_pCSdynamic\Workspace_instantBTSPhomeo_Pamp80pA_pCSdyn_F-like_Apcs0_6_Bpcs_0_0125_Taupcs1_SDcs21_Bound60_WUdyntau15s_Ddecay0_2_Pdecay1_5_500samples.mat');
+%modelF = load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\BTSP\100samples\instantBTSPhomeo_pCSdynamic\Workspace_instantBTSPhomeo_Pamp80pA_pCSdynamic_F-like_Apcs0_53_Bpcs_0_025_Taupcs1.35_SDcs20_Bound60_WUdyntau15s_500samples.mat');
+% modelF = load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\BTSP\MilsteinModel\Wmax125pA\workspace_pCS0_2%_repeat1rule_500samples_Wmax125pA.mat');
+% modelF = load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\BTSP\100samples\instantBTSPdecoupledHomeonorm\Speed15cmpersec_Pamp20pA\Workspace_Speed15_Pamp20pA_pCS0_002_500repeats.mat');
 % modelF = load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\BTSP\100samples\instantBTSPdecoupledHomeonorm\Speed15cmpersec_Pamp25_5pA\Workspace_BTSP100repeats_Speed15_Pamp25_5pA_pCS0_0025.mat');
 group{4} = 4*ones(length(modelF.COMslope),1);
 slopes{4} = modelF.COMslope';
@@ -240,6 +249,32 @@ mapCA = [mapCA1;mapCA3];
 colors = [mapCA1(2,:); mapCA1(1,:); mapCA3(2,:); mapCA3(1,:)];
 % figure; scatter(1:4,1:4,200,mapCA, 'filled')
 
+%%
+% Apcs = [0.8, 0.6, 0.7, 0.5]; % frequency of CSs on second lap. Cf Supp Fig associated to Fig 7. Same max amplitude for Familiar (F) and Novel (N) conditions.
+% Tau_pcs = [1.5, 1, 1.25, 0.75]; % in laps (cf Fig 6 and 7 of our manuscript.). Same time constants for F and N (but exp fits on instantaneous MSD suggest 1.15 for N and 0.85 for F)
+% Bpcs = [0.05, 0.03, 0.04, 0.02]; % 0 for F, > 0 for N (cf Fig 7: a static pCS is not enough to lead to high Diffusion coeff in later laps)
+% % SDcs = [29, 21];
+% 
+% laps = 0:0.1:28;
+% % x=1:300;
+% for n = 1:4
+% pCSlap(n,:) = Apcs(n).*exp(-laps./Tau_pcs(n)) + Bpcs(n); % lapwise p(CS) not tied to current PF
+% % pCSloc(n,:) = (1/(SDcs(n)*sqrt(2*pi))).*exp(-0.5*(x - 300/2).^2/SDcs(n)^2);
+% end
+% 
+% figure
+% for n = 1:4
+% plot(laps+1, pCSlap(n,:), '-', 'LineWidth', 1,'Color', colors(n,:)); hold on
+% end
+% yline(0,'k--')
+% ylim([-0.03 1])
+% xlim([0 15])
+% xlabel('post-onset laps')
+% ylabel('lap-wise p(CS)')
+% box off
+% axis square
+
+%%
 figure 
 subplot(1,3,1) % violin plots. 
     v = violinplot(COMslopeAll, gp, 'ViolinColor', [0 0 0], 'ShowData', false, 'ShowMean', true);
@@ -250,7 +285,7 @@ subplot(1,3,1) % violin plots.
     set(gca, 'XTick', 1:length(group), 'XTickLabel', ['CA1_N'; '0.005'; 'CA1_F'; '0.002']);
     box off;
     axis square
-subplot(1,3,2) % bootstrapped means compared to CA1 mean (averaged across animals)
+subplot(1,3,2) % bootstrapped means compared to CA1 means averaged across animals)
     y = meanSlope; yneg = y-SlopeCIlo; ypos = SlopeCIup-y;
     % errorbar(1, y(1),yneg(1),ypos(1),'o', 'Color', mapCA1(2,:), 'MarkerFaceColor', mapCA1(2,:), 'MarkerSize', 3); hold on
     errorbar(1:length(group), y,yneg,ypos,'o', 'Color', 'k', 'MarkerFaceColor', [0 0 0], 'MarkerSize', 3); hold on
@@ -316,3 +351,180 @@ subplot(2,2,4) % props
     title('all PFs pooled')
     box off;
     axis square
+
+
+figure 
+subplot(1,3,1) % violin plots. 
+    v = violinplot(COMslopeAll, gp, 'ViolinColor', [0 0 0], 'ShowData', false, 'ShowMean', true);
+    v(1).ViolinColor = mapCA1(2,:);
+    v(3).ViolinColor = mapCA1(1,:);
+    yline(0, 'k--')
+    ylabel('Shifting slopes (cm/lap)');
+    set(gca, 'XTick', 1:length(group), 'XTickLabel', ['CA1N'; '0.3%'; 'CA1F'; '0.2%']);
+    box off;
+    axis square
+subplot(1,3,2) % bootstrapped means compared to CA1 mean (averaged across animals)
+    y = medianASlope; yneg = y-ASlopeCIlo; ypos = ASlopeCIup-y;
+    errorbar(1:length(group), y,yneg,ypos,'o', 'Color', 'k', 'MarkerFaceColor', [0 0 0], 'MarkerSize', 3); hold on
+    yline(0, 'k-');
+    yline(medianASlope(1), '--', 'Color', mapCA1(2,:), 'LineWidth', 1.5);
+    yline(medianASlope(3), '--', 'Color', mapCA1(1,:), 'LineWidth', 1.5);
+    xlim([0.5 length(group)+0.5]);
+    ylim([0 0.5]); 
+    xlabel('models'); ylabel('median |slope| (cm/lap)');
+    set(gca, 'XTick', 1:length(group), 'XTickLabel', ['CA1N'; '0.3%'; 'CA1F'; '0.2%']);
+    box off;
+    axis square
+subplot(1,3,3) % props 
+    b2 = bar(PropsAll, 'stacked', 'FaceColor','flat');
+    b2(1).CData = blue; b2(2).CData = red; b2(3).CData = grey;
+    ylabel('proportion of PFs'); xlabel('models')
+    xlim([0.5 length(group)+0.5]);
+    set(gca, 'XTick', 1:length(group), 'XTickLabel', ['CA1N'; '0.3%'; 'CA1F'; '0.2%']);
+    title('all PFs pooled')
+    box off;
+    axis square
+
+%% P(CS) dynamic models
+
+TrajsN = cat(1,modelN.COMbin{:}).*6; % in cm
+Disp = TrajsN - TrajsN(:,1); % trajectories centered on initial location, with forward direction as positive values
+DispSq = Disp.^2;
+MSD = mean(DispSq,1,"omitmissing"); % average all neurons for each lap
+for lap = 1:size(TrajsN,2)
+msdCI(:,lap) = bootci(1000, @nanmean, DispSq(:,lap));
+end
+
+TrajsF = cat(1,modelF.COMbin{:}).*6; % in cm
+DispF = TrajsF - TrajsF(:,1); % trajectories centered on initial location, with forward direction as positive values
+DispFSq = DispF.^2;
+MSDf = mean(DispFSq,1,"omitmissing"); % average all neurons for each lap
+for lap = 1:size(TrajsF,2)
+msdFCI(:,lap) = bootci(1000, @nanmean, DispFSq(:,lap));
+end
+
+RegStart = 4;
+Xlm = [ [RegStart:length(MSD)]', ones(size([RegStart:length(MSD)]'))];
+[Bmsd,BINTmsd,Rmsd,RINTmsd,STATSmsd] = regress(MSD(RegStart:end)', Xlm);
+lmMSD = Xlm*Bmsd;
+[BmsdF,BINTmsdF,RmsdF,RINTmsdF,STATSmsdF] = regress(MSDf(RegStart:end)', Xlm);
+lmMSDf = Xlm*BmsdF;
+
+% BTSP models color code
+% cline = lines(7);
+% mapBTSP(1,:) = cline(1,:); % N
+% mapBTSP(2,:) = cline(1,:)+0.25;% F
+Blues = brewermap(9,'*Blues');
+mapBTSP(1,:) = Blues(1,:); % N
+mapBTSP(2,:) = Blues(4,:); % F
+
+% parameters for [N,F]
+Apcs = [0.65, 0.6]; % frequency of CSs on second lap. Cf Supp Fig associated to Fig 7. Same max amplitude for Familiar (F) and Novel (N) conditions.
+Tau_pcs = [1.35, 1]; % in laps (cf Fig 6 and 7 of our manuscript.). Same time constants for F and N (but exp fits on instantaneous MSD suggest 1.15 for N and 0.85 for F)
+Bpcs = [0.025, 0.0125]; % 0 for F, > 0 for N (cf Fig 7: a static pCS is not enough to lead to high Diffusion coeff in later laps)
+SDcs = [29, 21];
+
+laps = 0:0.1:28;
+x=1:300;
+for n = 1:2
+pCSlap(n,:) = Apcs(n).*exp(-laps./Tau_pcs(n)) + Bpcs(n); % lapwise p(CS) not tied to current PF
+pCSloc(n,:) = (1/(SDcs(n)*sqrt(2*pi))).*exp(-0.5*(x - 300/2).^2/SDcs(n)^2);
+end
+
+figure
+tiledlayout('flow', 'TileSpacing','Compact','Padding','Compact')
+
+nexttile % lapwise p(CS)
+for n = 1:2
+plot(laps+1, pCSlap(n,:), '-', 'LineWidth', 1,'Color', mapBTSP(n,:)); hold on
+end
+legend('BTSPn', 'BTSPf')
+ylim([0 0.7])
+xlabel('post-onset laps')
+ylabel('lap-wise p(CS)')
+box off
+axis square
+
+nexttile % position-wise p(CS)
+% PF = (1/(SDcs(2)*sqrt(2*pi))).*exp(-0.5*(x - 300/2).^2/13^2); hold on
+colororder({'b','k'})
+PF = 10.*exp(-0.5*(x - 300/2).^2/13^2); hold on
+yyaxis right
+plot(x, PF, 'Color', [0.5 0.5 0.5],'LineWidth', 1); hold on
+ylabel('Hz')
+set(gca, 'YTick', [0, 10], 'YTickLabel', {'0', '10'})
+yyaxis left
+for n = 1:2
+    plot(x, pCSloc(n,:), '-', 'LineWidth', 1,'Color', mapBTSP(n,:)); hold on
+end
+% xline(150,'k--')
+xline([150-60, 150+60], 'k--')
+set(gca, 'XTick', [0, 90, 150, 210, 300], 'XTickLabel', {'-150', '-60', '0', '+60', '+150'})
+set(gca, 'YTick', [0, round(max(pCSloc,[],"all"),1, 'significant')])
+xlabel('COM-centered position on track')
+ylabel('position-wise p(CS)')
+box off; axis square
+
+nexttile % MSD
+plot_ci([1:length(MSD)]-1, [MSD' msdCI(1,:)' msdCI(2,:)'], 'MainLineColor', mapBTSP(1,:), 'MainLineWidth', 1.5, 'PatchColor', mapBTSP(1,:), 'LineColor', mapBTSP(1,:), 'PatchAlpha', 0.6); hold on
+plot_ci([1:length(MSDf)]-1, [MSDf' msdFCI(1,:)' msdFCI(2,:)'], 'MainLineColor', mapBTSP(2,:), 'MainLineWidth', 1.5, 'PatchColor', mapBTSP(2,:), 'LineColor', mapBTSP(2,:), 'PatchAlpha', 0.7); hold on
+for n = 1:2
+    plot([1:length(MSDc(:,n))]-1, MSDc(:,n),'-', 'LineWidth',1,'Color', colors(n,:)); hold on 
+end
+plot([1:length(MSD)]-1, MSD','-', 'LineWidth',1,'Color', mapBTSP(1,:)); hold on 
+plot([1:length(MSDf)]-1, MSDf','-', 'LineWidth',1,'Color', mapBTSP(2,:)); hold on
+text(length(MSD), max(lmMSD), ['D = ' num2str( round(Bmsd(1)/2, 2, 'significant') )], 'Color', mapBTSP(1,:)); hold on
+text(length(MSD), max(lmMSDf), ['D = ' num2str( round(BmsdF(1)/2, 2, 'significant') )], 'Color', mapBTSP(2,:))
+xlabel('Laps after onset')
+ylabel('mean squared displacement (cm^2)')
+box off
+axis square
+
+nexttile % violin plots. 
+    v = violinplot(COMslopeAll, gp, 'ViolinColor', [0 0 0], 'ShowData', false, 'ShowMean', true, 'ViolinAlpha', 0.5);
+    v(1).ViolinColor = mapCA1(2,:);
+    v(2).ViolinColor = mapBTSP(1,:);
+    v(3).ViolinColor = mapCA1(1,:);
+    v(4).ViolinColor = mapBTSP(2,:);
+    yline(0, 'k--')
+    ylabel('Shifting slopes (cm/lap)');
+    set(gca, 'XTick', 1:length(group), 'XTickLabel', {'CA1N'; 'BTSPn'; 'CA1F'; 'BTSPf'});
+    box off;
+    axis square
+
+nexttile
+    y = meanSlope; yneg = y-SlopeCIlo; ypos = SlopeCIup-y;
+    errorbar(1:length(group), y,yneg,ypos,'o', 'Color', 'k', 'MarkerFaceColor', [0 0 0], 'MarkerSize', 3); hold on
+    yline(0, 'k-');
+    yline(meanSlope(1), '--', 'Color', mapCA1(2,:), 'LineWidth', 1.5);
+    yline(meanSlope(3), '--', 'Color', mapCA1(1,:), 'LineWidth', 1.5);
+    xlim([0.5 length(group)+0.5]);
+    ylim([-0.5 0.5]); 
+    ylabel('mean slope (cm/lap)');
+    set(gca, 'XTick', 1:length(group), 'XTickLabel', {'CA1N'; 'BTSPn'; 'CA1F'; 'BTSPf'});
+    box off;
+    axis square
+
+nexttile % props 
+    b2 = bar(PropsAll, 'stacked', 'FaceColor','flat');
+    b2(1).CData = blue; b2(2).CData = red; b2(3).CData = grey;
+    ylabel('fraction of PFs');
+    xlim([0.5 length(group)+0.5]);
+    set(gca, 'XTick', 1:length(group), 'XTickLabel', {'CA1N'; 'BTSPn'; 'CA1F'; 'BTSPf'});
+    % title('all PFs pooled')
+    box off;
+    axis square
+
+
+ figure
+for n = 1:2
+plot(laps+1, pCSlap(n,:), '-', 'LineWidth', 1,'Color', mapBTSP(n,:)); hold on
+yline(Bpcs(n),'--', 'LineWidth', 1, 'Color', mapBTSP(n,:))
+end
+legend('BTSPn', 'BTSPf')
+ylim([0 0.1])
+xlim([0 15])
+xlabel('post-onset laps')
+ylabel('lap-wise p(CS)')
+box off
+axis square
