@@ -4,20 +4,15 @@ close all
 Minlaps = 15; % min number of laps where PF is defined (after interpolation, if interp is used)
 Minlaps2 = 30; % min number of laps runned by animal 
 
-% load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\CanData\CA1_COM.mat')
 load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\CanData\CA1_COM_withPFs.mat')
 COMdata.CA1 = data; clear data
 COMdata.CA1.animalID = {'1-3'; '1-3'; '1-3'; '1-3'; 'cdc'; 'cfc'; 'cfc'; 'wt1'; 'wt1'};
 
-% load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\CanData\CA3_COM_new_namecorrected.mat')
 load('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\CanData\CA3_COM_withPFs.mat')
 COMdata.CA3 = data; clear data
 COMdata.CA3.animalID = {'4-2'; '4-2'; '4-2'; '4-2'; '4-2'; '4-2'; '4-1'; '4-1'; '4-1'; '4-1'; '4-1'; '4-1'; '5-3'; '5-3'; '5-3'; '5-1'; '5-1'; '5-1'; '5-3'; '5-3'; '5-3';'5-4';'5-4';'5-4'; '5-1'; '5-1'; '5-1';'5-4';'5-4';'5-4';'7-2';'7-2';'7-2';'7-2';'9-1';'9-1';'9-1' };
 
 fn=fieldnames(COMdata);
-
-SpeedT = readtable('G:\My Drive\LabReasearch\Projects\Sheffield\Can1-Shifting\CanData\IndividualBehavior\All\Can1_SpeedWithFreeze.xlsx');
-% note: VR: 1 is f1, 2 is f2, 3 is n1, 4 is n2
 
 COMtrajMat = [];
 COMtrajMatNaN = [];
@@ -33,14 +28,10 @@ T.Region = {};
 T.PlaneID = {};
 T.f_n = {};
 T.VRstr = {};
-T.VR = [];
-T.PF = [];
-T.animalSpeed = [];  
+T.PF = []; 
 T.meanShift =  [];
 T.maxShift = [];
 T.maxShift_Lap = [];
-T.maxS_LapSpeed = [];
-T.maxS_PrevLapSpeed = [];
 T.COM_slope = [];                
 T.COM_intcp = [];
 T.COM_R2 = [];
@@ -64,13 +55,7 @@ for a = 1:2 %CA1 or CA3
         fn2 = fieldnames(COMdata.(fn{a}).(fn1{i}));
         DcomAll{a,i} = [];
         for j = 1:length(fn2) % imaging planes
-            
-%             SpatialFRout(lap,:) = SpikeCountOut(lap, :)./TimeInBins(lap, :); % FR in each spatial bin, in Hz 
-%             %Compute lap-wise COM, SD, skewness, mean and max firing rate
-%             COMbin(lap) = sum(SpatialFRout(lap,:).*[1:Nbin])/sum(SpatialFRout(lap,:));
-%             COMloc(lap) = sum(SpatialFRout(lap,:).*BinCenters)/sum(SpatialFRout(lap,:));
-%             PFsdOut(lap) = sqrt( sum( (BinCenters - COMloc(lap)).^2.*SpatialFRout(lap,:)/sum(SpatialFRout(lap,:)) ) ); %lap-wise SD of the PF
-
+          
             COMloc = COMdata.(fn{a}).(fn1{i}).(fn2{j}).COM .*6; % multiply by 6 to get location in cm (this is inherited from Can's code)
             Onset = COMdata.(fn{a}).(fn1{i}).(fn2{j}).onset_lap;
             NumPFs = length(Onset);
@@ -170,41 +155,11 @@ for a = 1:2 %CA1 or CA3
                 VRnum = extract(fn2(j),'00'+digitsPattern); 
                 T.VRstr{end+1}= [T.f_n{end} VRnum{end}]; 
                 
-                % scalar code as in the Speed table
-                if contains(T.VRstr{end}, 'f001') | contains(T.VRstr{end}, 'f000')
-                  T.VR(end+1) = 1;
-                elseif contains(T.VRstr{end}, 'f002')
-                    T.VR(end+1) = 2;
-                elseif contains(T.VRstr{end}, 'n001') | contains(T.VRstr{end}, 'n000')
-                    T.VR(end+1) = 3;
-                elseif contains(T.VRstr{end},'n002')
-                    T.VR(end+1) = 4;
-                else
-%                     disp('error')
-%                     return
-                    T.VR(end+1) = NaN;
-                end
-
-                % speed
-                T.animalSpeed(end+1) = mean(SpeedT.LapSpeed(strcmp(T.animalID{end}, SpeedT.animalID) & SpeedT.VR == T.VR(end))); %average animal speed over the laps considered
-                
+                % store info about shifts
                 T.meanShift =  [T.meanShift; mean(Dcom(k,:), 'omitnan')];
                 [maxShift, maxShift_Lap] = max(abs(Dcom(k,:)));
                 T.maxShift = [T.maxShift; maxShift];
                 T.maxShift_Lap = [T.maxShift_Lap; maxShift_Lap];
-                maxS_LapSpeed = SpeedT.LapSpeed(strcmp(T.animalID{end}, SpeedT.animalID) & SpeedT.VR == T.VR(end) & SpeedT.LapNum == T.maxShift_Lap(end));
-                maxS_PrevLapSpeed = SpeedT.LapSpeed(strcmp(T.animalID{end}, SpeedT.animalID) & SpeedT.VR == T.VR(end) & SpeedT.LapNum == T.maxShift_Lap(end)-1);
-                if ~isempty(maxS_LapSpeed)
-                T.maxS_LapSpeed(end+1) = maxS_LapSpeed;
-                else
-                T.maxS_LapSpeed(end+1) = NaN;    
-                end
-                if ~isempty(maxS_PrevLapSpeed)
-                T.maxS_PrevLapSpeed(end+1) = maxS_PrevLapSpeed;
-                else
-                T.maxS_PrevLapSpeed(end+1) = NaN;    
-                end
-                clear maxS_LapSpeed maxS_PrevLapSpeed
         
                 T.COMinterp_slope = [T.COMinterp_slope; b(2)];
                 T.COMinterp_intcp = [T.COMinterp_intcp; b(1)];
@@ -229,25 +184,6 @@ for a = 1:2 %CA1 or CA3
                 T.RCreg_p3 = [T.RCreg_p3; 0]; %[T.RCreg_p3; mdl.p3];
                 T.RCreg_R2 = [T.RCreg_R2; gof.rsquare];
                 T.RCreg_R2adj = [T.RCreg_R2adj; gof.adjrsquare];
-
-%                 T.RCreg_p1 = [T.RCreg_p1; mdl.Coefficients.Estimate(1)];
-%                 T.RCreg_p2 = [T.RCreg_p2; mdl.Coefficients.Estimate(2)];
-%                 T.RCreg_R2 = [T.RCreg_R2; mdl.Rsquared.Ordinary];
-%                 T.RCreg_R2adj = [T.RCreg_R2adj; mdl.Rsquared.Adjusted];
-% %                 T.RCreg_pval = [T.RCreg_pval; mdl.ModelFitVsNullModel.Fstats]; %field doesn't seem to exist despite what says documentation...
-
-% 
-%                 I = find(strcmp(BehavM.uniqueID, x1.AnimalID)>0);
-%                           if ~isempty(I)
-
-%                 figure % COM trajectory (raw + interpolated) and regression
-%                 % plot(1:Nlaps, COMloc, 'k-'); hold on
-%                 plot(1:length(COMtraj2), COMtraj2, 'b-'); hold on
-%                 scatter(1:length(COMtraj), COMtraj, 'r'); hold on
-%                 yline(0,'k--');
-%                 ylim([-150 150]);
-%                 xlabel('lap'); ylabel('COM position (cm)');
-%                 % title({'Place Field COM trajectory, slope =' num2str(b(2)) 'pval =' num2str(stats(3))})
             
             end
         end
@@ -269,12 +205,8 @@ T.Region = T.Region';
 T.PlaneID = T.PlaneID';
 T.f_n = T.f_n';
 T.VRstr = T.VRstr';
-T.VR = T.VR';
 T.PF = T.PF';
 T.COMonset = T.COMonset';
-T.animalSpeed = T.animalSpeed';
-T.maxS_LapSpeed = T.maxS_LapSpeed';
-T.maxS_PrevLapSpeed = T.maxS_PrevLapSpeed';
 T.shiftDir = T.shiftDir';
 
 % T = rmfield(T,'RCreg_pval');
@@ -2415,62 +2347,6 @@ subplot(1,2,2)
 histogram2(T.maxShift_Lap, T.maxShift,'DisplayStyle','tile','ShowEmptyBins','off', 'Normalization', 'count');
 xlabel('running lap'); ylabel('max COM shift per PF (cm/lap)');
 box off; axis square;
-
-%% Speed vs Shift
-
-figure
-scatter(T.maxS_PrevLapSpeed, T.maxS_LapSpeed)
-xlabel('Previous Lap Speed (cm/s)'); ylabel('Lap Speed');
-box off; axis square;
-%CCL: speed on lap and previous lap are correlated
-
-figure
-scatter(T.maxS_PrevLapSpeed, T.maxShift)
-xlabel('Previous Lap Speed (cm/s)'); ylabel('max absolute COM shift per PF (cm/lap)');
-box off; axis square;
-
-figure
-histogram2(T.maxS_PrevLapSpeed, T.maxShift, 'DisplayStyle','tile','ShowEmptyBins','off')
-xlabel('Previous Lap Speed (cm/s)'); ylabel('max absolute COM shift per PF (cm/lap)');
-box off; axis square;
-cb = colorbar;
-cb.Label.String = 'PFs';
-
-figure
-subplot(1,2,1)
-scatter(T.maxS_LapSpeed, T.maxShift)
-xlabel('Lap Speed (cm/s)'); ylabel('max absolute COM shift per PF (cm/lap)');
-box off; axis square;
-subplot(1,2,2)
-histogram2(T.maxS_LapSpeed, T.maxShift, 'DisplayStyle','tile','ShowEmptyBins','off')
-xlabel('Lap Speed (cm/s)'); ylabel('max absolute COM shift per PF (cm/lap)');
-xlim([0 max(T.maxS_LapSpeed)])
-box off; axis square;
-% cb = colorbar;
-% cb.Label.String = 'PFs';
-
-figure
-boxchart(T.animalSpeed,abs(T.meanShift))
-xlabel('mean animal speed (cm/s)'); ylabel('absolute mean COM shift per PF (cm/lap)');
-box off; axis square;
-
-figure
-boxchart(T.animalSpeed,abs(T.COM_slope)); hold on
-xlabel('mean animal speed (cm/s)'); ylabel('absolute COM slope per PF (cm/lap)');
-box off; axis square;
-
-figure
-boxchart(T.animalSpeed(T.COM_pval<0.05),abs(T.COM_slope(T.COM_pval<0.05))); hold on
-[B,~,~,~,StatsB] = regress(abs(T.COM_slope(T.COM_pval<0.05)), [ones(size(T.animalSpeed(T.COM_pval<0.05))), T.animalSpeed(T.COM_pval<0.05)]); % regression
-Yfit = B(1) + B(2)*[min(T.animalSpeed(T.COM_pval<0.05)):max(T.animalSpeed(T.COM_pval<0.05))];
-plot([min(T.animalSpeed(T.COM_pval<0.05)):max(T.animalSpeed(T.COM_pval<0.05))],Yfit, 'g-', 'markersize', 2);
-xlabel('mean animal speed (cm/s)'); ylabel('absolute COM slope per PF (cm/lap)');
-title(['sig PFs: R-sqare = ' num2str(StatsB(1)) ' p = ' num2str(StatsB(3))])
-box off; axis square;
-
-% same plots but for proportion of sig shifting PFs rather than actual shift speed
-
-% do linear model to check influence of various variables (CA3 vs CA1, lap speed, f vs n) on absolute shift
 
 %% local functions
 
